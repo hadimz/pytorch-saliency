@@ -34,18 +34,6 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 STD_NORMALIZE = Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-class InterpolationMode(Enum):
-    """Interpolation modes
-    Available interpolation methods are ``nearest``, ``bilinear``, ``bicubic``, ``box``, ``hamming``, and ``lanczos``.
-    """
-
-    NEAREST = "nearest"
-    BILINEAR = "bilinear"
-    BICUBIC = "bicubic"
-    # For PIL compatibility
-    BOX = "box"
-    HAMMING = "hamming"
-    LANCZOS = "lanczos"
 
 class DiscreteNeuron(Module):
     def forward(self, x):
@@ -78,7 +66,7 @@ class RandomSizedCrop2(object):
         interpolation: Default: PIL.Image.BILINEAR
     """
 
-    def __init__(self, size, min_area=0.3, interpolation=InterpolationMode.BILINEAR):
+    def __init__(self, size, min_area=0.3, interpolation=Image.Resampling.BILINEAR):
         self.size = size
         self.interpolation = interpolation
         self.min_area = min_area
