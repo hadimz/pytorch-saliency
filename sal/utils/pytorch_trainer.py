@@ -115,7 +115,7 @@ class NiceTrainer:
         self._is_in_train_mode = None
         self.goodbye_after = goodbye_after
 
-        self._extra_var_info_string = (info_string if isinstance(info_string, basestring) else ' - '.join(info_string)) + (
+        self._extra_var_info_string = (info_string if isinstance(info_string, (str, bytes)) else ' - '.join(info_string)) + (
             (' - ' if self.printable_vars else '') + ' - '.join('%s: {%s:.4f}' % (e, e) for e in self.printable_vars))
 
 
