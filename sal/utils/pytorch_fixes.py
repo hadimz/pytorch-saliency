@@ -84,7 +84,6 @@ class RandomSizedCrop2(object):
         self.min_area = min_area
 
     def __call__(self, img):
-        print('interpolation: {}'.format(self.interpolation))
         for attempt in range(10):
             area = img.size[0] * img.size[1]
             target_area = random.uniform(self.min_area, 1.0) * area
