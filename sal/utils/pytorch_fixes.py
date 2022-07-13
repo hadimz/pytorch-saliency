@@ -66,7 +66,7 @@ class RandomSizedCrop2(object):
         interpolation: Default: PIL.Image.BILINEAR
     """
 
-    def __init__(self, size, min_area=0.3, interpolation=Image.BILINEAR):
+    def __init__(self, size, min_area=0.3, interpolation="bilinear"):
         self.size = size
         self.interpolation = interpolation
         self.min_area = min_area
