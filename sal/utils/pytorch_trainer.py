@@ -143,7 +143,7 @@ class NiceTrainer:
         @TimeEvent(period=period, first_at=period)
         def periodic_save(s):
             print
-            print INFO_TEMPLATE % 'Performing a periodic save...'
+            print(INFO_TEMPLATE % 'Performing a periodic save...')
             s.save()
         self.events.append(periodic_save)
 
@@ -155,7 +155,7 @@ class NiceTrainer:
                 s._lr_sheduler = StepLR(s.optimizer, period, gamma)
             s._lr_sheduler.step(epoch=s.info_vars['epochs_done'])
             for param_group in s.optimizer.param_groups:
-                print INFO_TEMPLATE % ('LR ' + str(param_group['lr']))
+                print(INFO_TEMPLATE % ('LR ' + str(param_group['lr'])))
         self.events.append(lr_step_event)
 
 
@@ -163,7 +163,7 @@ class NiceTrainer:
 
     def _main_loop(self, is_training, steps=None, allow_switch_mode=True):
         """Trains for 1 epoch if steps is None. Otherwise performs specified number of steps."""
-        if steps is  not None: print  WARN_TEMPLATE % 'Num steps is not fully supported yet! (fix it!)'  # todo allow continue and partial execution
+        if steps is  not None: print(WARN_TEMPLATE % 'Num steps is not fully supported yet! (fix it!)')  # todo allow continue and partial execution
         if not is_training:
             assert self.val_dts is not None, 'Validation dataset was not provided'
         if allow_switch_mode and self._is_in_train_mode != is_training:
@@ -172,7 +172,7 @@ class NiceTrainer:
                 self._is_in_train_mode = is_training
             else:
                 if is_training:
-                    print WARN_TEMPLATE % "could not set the modules to the training mode because neither set_trainable nor modules were provided, assuming already in the training mode"
+                    print(WARN_TEMPLATE % "could not set the modules to the training mode because neither set_trainable nor modules were provided, assuming already in the training mode")
                     self._is_in_train_mode = True
                 else:
                     raise ValueError("cannot set the modules to the eval mode because neither set_trainable nor modules were provided")
@@ -321,13 +321,13 @@ class NiceTrainer:
 
     def train(self, steps=None):
         if steps is None:
-            print '_'*55
-            print 'Epoch', self.info_vars['epochs_done']+1
+            print('_'*55)
+            print('Epoch', self.info_vars['epochs_done']+1)
         self._main_loop(is_training=True, steps=steps, allow_switch_mode=True)
 
     def validate(self, allow_switch_mode=False):
         old_info = self.info_vars.copy()
-        print "Validation:"
+        print("Validation:")
         self._main_loop(is_training=False, steps=None, allow_switch_mode=allow_switch_mode)
         self.info_vars = old_info
 
@@ -531,7 +531,7 @@ def auto_norm(im, auto_normalize=True, auto_fix=True):
 def img_show_event(imgs_names, every_n_seconds=5, ith=0):
     @TimeEvent(period=every_n_seconds)
     def f(s):
-        if isinstance(imgs_names, basestring):
+        if isinstance(imgs_names, (str,bytes)):
             im = s.pt_store[imgs_names][ith]
         else:
             cands = tuple(auto_norm(s.pt_store[i][ith]) for i in imgs_names)
@@ -598,7 +598,7 @@ def simple_img_classifier_train(model, dts, batch_size=512, epochs=25, lr=0.1, l
                      lr_step_period=lr_step,
                      val_dts=dts.get_loader(val_dts, batch_size))
 
-    for e in xrange(epochs):
+    for e in range(epochs):
         nt.train()
     nt.validate()
 

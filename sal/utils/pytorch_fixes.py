@@ -110,7 +110,7 @@ class AssertSize(Module):
 
 class ShapeLog(Module):
     def forward(self, x):
-        print x.size()
+        print(x.size())
         return x
 
 class PixelShuffleBlock(Module):
@@ -133,12 +133,18 @@ def SimpleCNNBlock(in_channels, out_channels,
         current_channels = in_channels
         _modules = []
         for layer in range(layers):
-            _modules.append(Conv2d(current_channels, out_channels, kernel_size, stride=stride if layer==0 else 1, padding=kernel_size/2, bias=not follow_with_bn))
+            _modules.append(Conv2d(current_channels,
+                            out_channels,
+                            kernel_size,
+                            stride=stride if layer==0 else 1,
+                            padding=int(kernel_size/2),
+                            bias=not follow_with_bn))
             current_channels = out_channels
             if follow_with_bn:
                 _modules.append(BatchNorm2d(current_channels, affine=affine))
             if activation_fn is not None:
                 _modules.append(activation_fn())
+        print(_modules)
         return Sequential(*_modules)
 
 
@@ -221,7 +227,9 @@ class UNetUpsampler(Module):
         assert follow_up_residual_blocks >= 1, 'You must follow up with residuals when using unet!'
         assert passthrough_channels >= 1, 'You must use passthrough with unet'
         self.upsampler = upsampler_block(in_channels=in_channels,
-                                         out_channels=out_channels, kernel_size=upsampler_kernel_size, activation_fn=activation_fn)
+                                         out_channels=out_channels,
+                                         kernel_size=upsampler_kernel_size,
+                                         activation_fn=activation_fn)
 
         self.follow_up = BottleneckBlock(out_channels+passthrough_channels, out_channels, layers=follow_up_residual_blocks, activation_fn=activation_fn)
 
@@ -268,11 +276,11 @@ class EasyModule(Module):
     def restore(self, save_dir, step=1):
         p = os.path.join(save_dir, 'model-%d.ckpt' % step)
         if not os.path.exists(p):
-            print WARN_TEMPLATE % ('Could not find any checkpoint at %s, skipping restore' % p)
+            print(WARN_TEMPLATE % ('Could not find any checkpoint at %s, skipping restore' % p))
             return
         self.load_state_dict(torch.load(p))
-Module.save = EasyModule.save.__func__
-Module.restore = EasyModule.restore.__func__
+Module.save = EasyModule.save.__name__
+Module.restore = EasyModule.restore.__name__
 
 def one_hot(labels, depth):
     if labels.is_cuda:
@@ -308,7 +316,7 @@ def adapt_to_image_domain(images_plus_minus_one, desired_domain):
 class Bottleneck(Module):
     def __init__(self, in_channels, out_channels, stride=1, bottleneck_ratio=4, activation_fn=lambda: torch.nn.ReLU(inplace=False)):
         super(Bottleneck, self).__init__()
-        bottleneck_channels = out_channels/bottleneck_ratio
+        bottleneck_channels = int(out_channels/bottleneck_ratio)
         self.conv1 = Conv2d(in_channels, bottleneck_channels, kernel_size=1, bias=False)
         self.bn1 = BatchNorm2d(bottleneck_channels)
         self.conv2 = Conv2d(bottleneck_channels, bottleneck_channels, kernel_size=3, stride=stride,

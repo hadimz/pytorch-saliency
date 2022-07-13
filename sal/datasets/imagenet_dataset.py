@@ -1,5 +1,6 @@
 from torchvision.transforms import *
 from torchvision.datasets import ImageFolder
+import torch
 from torch.utils.data import dataloader
 import pycat, time, random
 from ..utils.pytorch_fixes import *
@@ -36,7 +37,7 @@ def get_val_dataset(size=224):
         raise ValueError(
             'Please make sure that you specify a path to the ImageNet dataset folder in sal/datasets/imagenet_dataset.py file!')
     return ImageFolder(IMAGE_NET_VAL_PATH, transform=Compose([
-        Scale(224),
+        Resize(224),
         CenterCrop(size),
         ToTensor(),
         STD_NORMALIZE,
@@ -57,8 +58,8 @@ def test():
     for ims, labs in loader:
         i+=1
         if not i%20:
-            print 'min', torch.min(ims),'max', torch.max(ims), 'var', torch.var(ims), 'mean', torch.mean(ims)
-            print "Images per second:", SAMP*BS/(time.time()-t)
+            print('min', torch.min(ims),'max', torch.max(ims), 'var', torch.var(ims), 'mean', torch.mean(ims))
+            print("Images per second:", SAMP*BS/(time.time()-t))
             pycat.show(ims[0].numpy())
             t = time.time()
         if i==100:
@@ -66,7 +67,7 @@ def test():
 
 
 
-from imagenet_synset import synset
+from sal.datasets.imagenet_synset import synset
 SYNSET_TO_NAME= dict((e[:9], e[10:]) for e in synset.splitlines())
 SYNSET_TO_CLASS_ID = dict((e[:9], i) for i, e in enumerate(synset.splitlines()))
 
