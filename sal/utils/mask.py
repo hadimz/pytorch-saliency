@@ -1,6 +1,6 @@
 import torch
 from torch.autograd import Variable
-import sal.utils.gaussian_blur
+from sal.utils import gaussian_blur
 
 def calc_smoothness_loss(mask, power=2, border_penalty=0.3):
     ''' For a given image this loss should be more or less invariant to image resize when using power=2...
