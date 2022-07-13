@@ -7,7 +7,7 @@ from torch.autograd import Variable
 
 def _gaussian_kernels(kernel_size, sigma, chans):
     assert kernel_size % 2, 'Kernel size of the gaussian blur must be odd!'
-    x = np.expand_dims(np.array(range(-kernel_size/2, -kernel_size/2+kernel_size, 1)), 0)
+    x = np.expand_dims(np.array(range(-int(kernel_size/2), -int(kernel_size/2)+kernel_size, 1)), 0)
     vals = np.exp(-np.square(x)/(2.*sigma**2))
     _kernel = np.reshape(vals / np.sum(vals), (1, 1, kernel_size, 1))
     kernel =  np.zeros((chans, 1, kernel_size, 1), dtype=np.float32) + _kernel
