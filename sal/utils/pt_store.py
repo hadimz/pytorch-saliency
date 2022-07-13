@@ -34,7 +34,7 @@ class PTStore:
 def to_numpy(cand):
     if isinstance(cand, Variable):
         return cand.data.cpu().numpy()
-    elif isinstance(cand, torch._TensorBase):
+    elif isinstance(cand, torch._C._TensorBase):
         return cand.cpu().numpy()
     elif isinstance(cand, (list, tuple)):
         return map(to_numpy, cand)
