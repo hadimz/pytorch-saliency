@@ -47,7 +47,7 @@ def to_number(x):
     if isinstance(x, (int, float)):
         return float(x)
     if isinstance(x, np.ndarray):
-        print(x)
+        print(x.shape)
         return x[0]
     return x.data[0]
 
