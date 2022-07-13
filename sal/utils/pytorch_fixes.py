@@ -7,6 +7,7 @@ __all__ = ['RandomSizedCrop2', 'STD_NORMALIZE', 'ShapeLog', 'AssertSize', 'Globa
            ]
 
 import random
+import math
 import torch
 from PIL import Image
 from torchvision.transforms import *
@@ -92,7 +93,7 @@ class RandomSizedCrop2(object):
                 return img.resize((self.size, self.size), self.interpolation)
 
         # Fallback
-        scale = Scale(self.size, interpolation=self.interpolation)
+        scale = Resize(self.size, interpolation=self.interpolation)
         crop = CenterCrop(self.size)
         return crop(scale(img))
 
@@ -159,7 +160,8 @@ def ReducedCNNBlock(in_channels, out_channels,
                                padding=kernel_size / 2, bias=not follow_with_bn))
         current_channels = out_channels
         if follow_with_bn:
-            _modules.append(Reducer4D(current_channels, family=reducer_family))
+            print('Unable to add Reducer4D!')
+            # _modules.append(Reducer4D(current_channels, family=reducer_family))
         if activation_fn is not None:
             _modules.append(activation_fn())
     return Sequential(*_modules)
@@ -260,7 +262,7 @@ class MultiModulator(Module):
         ''' class selector must be of shape (BS,)  Returns (BS, MODULATOR_SIZE) for each modulator.'''
         em = torch.squeeze(self.emb(selectors.view(-1, 1)), 1)
         res = []
-        for i in xrange(self.num_modulators):
+        for i in range(self.num_modulators):
             res.append( self._modules['m%d'%i](em) )
         return tuple(res)
 
@@ -521,7 +523,7 @@ class GanGroup(Module):
         opt = optimizer(self.parameters(), **optimizer_kwargs)
         @TrainStepEvent()
         def gan_group_train_evnt(s):
-            for _ in xrange(disc_steps):
+            for _ in range(disc_steps):
                 opt.zero_grad()
                 loss = self.discriminator_loss()
                 PT(disc_loss_=loss)
