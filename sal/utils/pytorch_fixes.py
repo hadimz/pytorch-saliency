@@ -66,7 +66,7 @@ class RandomSizedCrop2(object):
         interpolation: Default: PIL.Image.BILINEAR
     """
 
-    def __init__(self, size, min_area=0.3, interpolation=InterpolationMode.BILINEAR):
+    def __init__(self, size, min_area=0.3, interpolation=Image.BILINEAR):
         self.size = size
         self.interpolation = interpolation
         self.min_area = min_area
@@ -93,7 +93,7 @@ class RandomSizedCrop2(object):
                 return img.resize((self.size, self.size), self.interpolation)
 
         # Fallback
-        scale = Resize(self.size, interpolation=self.interpolation)
+        scale = Resize(self.size)
         crop = CenterCrop(self.size)
         return crop(scale(img))
 
