@@ -8,7 +8,7 @@ class PTStore:
 
     def __call__(self, **kwargs):
         assert len(kwargs)==1, "You must specify just 1 variable to add"
-        key, value = kwargs.items()[0]
+        key, value = list(kwargs.items())[0]
         setattr(self, key, value)
         return value
 
