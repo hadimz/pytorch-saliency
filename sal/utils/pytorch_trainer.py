@@ -306,7 +306,7 @@ class NiceTrainer:
         if steps is not None:  # really annoying that pytorch does not handle this on its own... todo improve this!
             dts_iter._shutdown_workers()
             time.sleep(11)
-            for e in dts_iter.workers:
+            for e in dts_iter._workers:
                 e.terminate()
             time.sleep(2)
             del dts_iter
