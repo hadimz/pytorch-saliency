@@ -44,7 +44,7 @@ def to_numpy(cand):
         return np.array([cand])
 
 def to_number(x):
-    if isinstance(x, (int, long, float)):
+    if isinstance(x, (int, float)):
         return float(x)
     if isinstance(x, np.ndarray):
         return x[0]
