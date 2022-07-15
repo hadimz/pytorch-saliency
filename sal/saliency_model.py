@@ -163,7 +163,7 @@ class SaliencyLoss:
         smoothness_loss = calc_smoothness_loss(_masks)
 
         print(_masks.size())
-        total_loss = destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
+        total_loss = torch.sum(nn.functional.sigmoid(_masks), dim=(1,2,3)) + destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
 
         if pt_store is not None:
             # add variables to the pt_store
