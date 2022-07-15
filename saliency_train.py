@@ -74,23 +74,27 @@ def phase2_visualise(s):
 
 
 
-nt_phase1 = NiceTrainer(ev_phase1, dts.get_loader(train_dts, batch_size=128), optim_phase1,
-                 val_dts=dts.get_loader(val_dts, batch_size=128),
-                 modules=[saliency],
-                 printable_vars=['loss', 'exists_accuracy'],
-                 events=[lr_step_phase1,],
-                 computed_variables={'exists_accuracy': accuracy_calc_op('exists_logits', 'is_real_label')})
+nt_phase1 = NiceTrainer(ev_phase1,
+                dts.get_loader(train_dts, batch_size=128),
+                optim_phase1,
+                val_dts=dts.get_loader(val_dts, batch_size=128),
+                modules=[saliency],
+                printable_vars=['loss', 'exists_accuracy'],
+                events=[lr_step_phase1,],
+                computed_variables={'exists_accuracy': accuracy_calc_op('exists_logits', 'is_real_label')})
 FAKE_PROB = .5
 nt_phase1.train(8500)
 
 print(GREEN_STR % 'Finished phase 1 of training, waiting until the dataloading workers shut down...')
 
-nt_phase2 = NiceTrainer(ev_phase2, dts.get_loader(train_dts, batch_size=64), optim_phase2,
-                 val_dts=dts.get_loader(val_dts, batch_size=64),
-                 modules=[saliency],
-                 printable_vars=['loss', 'exists_accuracy'],
-                 events=[phase2_visualise,],
-                 computed_variables={'exists_accuracy': accuracy_calc_op('exists_logits', 'is_real_label')})
+nt_phase2 = NiceTrainer(ev_phase2,
+                dts.get_loader(train_dts, batch_size=64),
+                optim_phase2,
+                val_dts=dts.get_loader(val_dts, batch_size=64),
+                modules=[saliency],
+                printable_vars=['loss', 'exists_accuracy'],
+                events=[phase2_visualise,],
+                computed_variables={'exists_accuracy': accuracy_calc_op('exists_logits', 'is_real_label')})
 FAKE_PROB = .3
 nt_phase2.train(3000)
 saliency.minimalistic_save('yoursaliencymodel')  # later to restore just use saliency.minimalistic_restore methdod.
