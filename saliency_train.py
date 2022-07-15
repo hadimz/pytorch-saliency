@@ -67,7 +67,7 @@ def phase2_visualise(s):
     mask = auto_norm(pt['masks'][0]*255, auto_normalize=False)
     preserved = auto_norm(pt['preserved'][0])
     destroyed = auto_norm(pt['destroyed'][0])
-    print
+    print()
     print('Target (%s) = %s' % (GREEN_STR%'REAL' if pt['is_real_label'][0] else RED_STR%'FAKE!' , dts.CLASS_ID_TO_NAME[pt['targets'][0]]))
     # final = np.concatenate((orig, mask, preserved, destroyed), axis=1)
     # pycat.show(final)
