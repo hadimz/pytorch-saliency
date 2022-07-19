@@ -169,7 +169,7 @@ class SaliencyLoss:
         fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
         # total_loss = fidelity_loss + sigmoid_loss + destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
         total_loss = fidelity_loss + 0.000001*sigmoid_loss + self.area_loss_coef*area_loss + self.preserver_loss_coef*preserver_loss
-
+        print(torch.max(_masks))
         if pt_store is not None:
             # add variables to the pt_store
             pt_store(masks=_masks)
