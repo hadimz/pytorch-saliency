@@ -16,7 +16,7 @@ RED_STR = '\033[38;5;1m%s\033[0m'
 INFO_TEMPLATE = '\033[38;5;2mINFO: %s\033[0m\n'
 WARN_TEMPLATE = '\033[38;5;1mWARNING: %s\033[0m\n'
 
-assert torch.cuda.is_available(), 'CUDA must be available'
+# assert torch.cuda.is_available(), 'CUDA must be available'
 
 
 
@@ -158,9 +158,6 @@ class NiceTrainer:
                 print(INFO_TEMPLATE % ('LR ' + str(param_group['lr'])))
         self.events.append(lr_step_event)
 
-
-
-
     def _main_loop(self, is_training, steps=None, allow_switch_mode=True):
         """Trains for 1 epoch if steps is None. Otherwise performs specified number of steps."""
         if steps is  not None: print(WARN_TEMPLATE % 'Num steps is not fully supported yet! (fix it!)')  # todo allow continue and partial execution
@@ -230,7 +227,8 @@ class NiceTrainer:
             batch = self.transform_inputs(batch, self)
             self.pt_store.batch = batch
 
-            torch.cuda.synchronize()
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
             t_start = time.time()
             # --------------------------- OPTIMIZATION STEP ------------------------------------
             if is_training:
@@ -243,7 +241,8 @@ class NiceTrainer:
                 loss.backward()
                 self.optimizer.step()
             # ----------------------------------------------------------------------------------
-            torch.cuda.synchronize()
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
             t_end = time.time()
 
             # call events
@@ -571,8 +570,12 @@ def accuracy_calc_op(logits_from='logits', labels_from='labels', top_n=1, avg_pr
 def ev_batch_to_images_labels(func):
     def f(batch):
         _images, _labels = batch
-        _images = PT(images=Variable(_images).cuda())
-        _labels = PT(labels=Variable(_labels).cuda())
+        if torch.cuda.is_available():
+            _images = PT(images=Variable(_images).cuda())
+            _labels = PT(labels=Variable(_labels).cuda())
+        else:
+            _images = PT(images=Variable(_images))
+            _labels = PT(labels=Variable(_labels))
         return func(_images, _labels)
     return f
 

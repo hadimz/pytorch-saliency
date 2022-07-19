@@ -42,7 +42,7 @@ class IterativeSaliency:
         optim = torch_optim.SGD([_mask], 0.1, 0.9, nesterov=True)
         #optim = torch_optim.Adam([_mask], 0.2)
 
-        for iteration in xrange(iterations):
+        for iteration in range(iterations):
             #_mask.data.clamp_(0., 1.)
             optim.zero_grad()
 

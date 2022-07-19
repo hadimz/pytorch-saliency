@@ -7,13 +7,14 @@ from sal.utils.resnet_encoder import resnet50encoder
 from torchvision.models.resnet import resnet50
 import pycat
 
+cuda = torch.cuda.is_available()
 
 # ---- config ----
 # You can choose your own dataset and a black box classifier as long as they are compatible with the ones below.
 # The training code does not need to be changed and the default values should work well for high resolution ~300x300 real-world images.
 # By default we train on 224x224 resolution ImageNet images with a resnet50 black box classifier.
 dts = imagenet_dataset
-black_box_fn = get_black_box_fn(model_zoo_model=resnet50)
+black_box_fn = get_black_box_fn(model_zoo_model=resnet50, cuda=cuda)
 # ----------------
 
 
@@ -24,7 +25,10 @@ val_dts = dts.get_val_dataset()
 # Default saliency model with pretrained resnet50 feature extractor, produces saliency maps which have resolution 4 times lower than the input image.
 saliency = SaliencyModel(resnet50encoder(pretrained=True), 5, 64, 3, 64, fix_encoder=True, use_simple_activation=False, allow_selector=True)
 
-saliency_p = nn.DataParallel(saliency).cuda()
+if cuda:
+    saliency_p = nn.DataParallel(saliency).cuda()
+else:
+    saliency_p = nn.DataParallel(saliency)
 saliency_loss_calc = SaliencyLoss(black_box_fn, smoothness_loss_coef=0.005) # model based saliency requires very small smoothness loss and therefore can produce very sharp masks
 optim_phase1 = torch_optim.Adam(saliency.selector_module.parameters(), 0.001, weight_decay=0.0001)
 optim_phase2 = torch_optim.Adam(saliency.get_trainable_parameters(), 0.001, weight_decay=0.0001)
@@ -40,8 +44,12 @@ def lr_step_phase1(s):
 
 @ev_batch_to_images_labels
 def ev_phase1(_images, _labels):
-    __fakes = Variable(torch.Tensor(_images.size(0)).uniform_(0, 1).cuda()<FAKE_PROB)
-    _targets = (_labels + Variable(torch.Tensor(_images.size(0)).uniform_(1, 999).cuda()).long()*__fakes.long())%1000
+    if cuda:
+        __fakes = Variable(torch.Tensor(_images.size(0)).uniform_(0, 1).cuda()<FAKE_PROB)
+        _targets = (_labels + Variable(torch.Tensor(_images.size(0)).uniform_(1, 999).cuda()).long()*__fakes.long())%1000
+    else:
+        __fakes = Variable(torch.Tensor(_images.size(0)).uniform_(0, 1)<FAKE_PROB)
+        _targets = (_labels + Variable(torch.Tensor(_images.size(0)).uniform_(1, 999)).long()*__fakes.long())%1000
     _is_real_label = PT(is_real_label=(_targets == _labels).long())
     _masks, _exists_logits, _ = saliency_p(_images, _targets)
     PT(exists_logits=_exists_logits)
@@ -51,12 +59,16 @@ def ev_phase1(_images, _labels):
 
 @ev_batch_to_images_labels
 def ev_phase2(_images, _labels):
-    __fakes = Variable(torch.Tensor(_images.size(0)).uniform_(0, 1).cuda()<FAKE_PROB)
-    _targets = PT(targets=(_labels + Variable(torch.Tensor(_images.size(0)).uniform_(1, 999).cuda()).long()*__fakes.long())%1000)
+    if cuda:
+        __fakes = Variable(torch.Tensor(_images.size(0)).uniform_(0, 1).cuda()<FAKE_PROB)
+        _targets = PT(targets=(_labels + Variable(torch.Tensor(_images.size(0)).uniform_(1, 999).cuda()).long()*__fakes.long())%1000)
+    else:
+        __fakes = Variable(torch.Tensor(_images.size(0)).uniform_(0, 1)<FAKE_PROB)
+        _targets = PT(targets=(_labels + Variable(torch.Tensor(_images.size(0)).uniform_(1, 999)).long()*__fakes.long())%1000)
     _is_real_label = PT(is_real_label=(_targets == _labels).long())
     _masks, _exists_logits, _ = saliency_p(_images, _targets)
     PT(exists_logits=_exists_logits)
-    saliency_loss = saliency_loss_calc.get_loss(_images, _labels, _masks, _is_real_target=_is_real_label,  pt_store=PT)
+    saliency_loss = saliency_loss_calc.get_loss(saliency_p, _images, _labels, _masks, _is_real_target=_is_real_label,  pt_store=PT)
     loss = PT(loss=saliency_loss)
 
 
@@ -75,9 +87,9 @@ def phase2_visualise(s):
 
 
 nt_phase1 = NiceTrainer(ev_phase1,
-                dts.get_loader(train_dts, batch_size=128),
+                dts.get_loader(train_dts, batch_size=64),
                 optim_phase1,
-                val_dts=dts.get_loader(val_dts, batch_size=128),
+                val_dts=dts.get_loader(val_dts, batch_size=64),
                 modules=[saliency],
                 printable_vars=['loss', 'exists_accuracy'],
                 events=[lr_step_phase1,],
@@ -88,9 +100,9 @@ nt_phase1.train(8500)
 print(GREEN_STR % 'Finished phase 1 of training, waiting until the dataloading workers shut down...')
 
 nt_phase2 = NiceTrainer(ev_phase2,
-                dts.get_loader(train_dts, batch_size=64),
+                dts.get_loader(train_dts, batch_size=32),
                 optim_phase2,
-                val_dts=dts.get_loader(val_dts, batch_size=64),
+                val_dts=dts.get_loader(val_dts, batch_size=32),
                 modules=[saliency],
                 printable_vars=['loss', 'exists_accuracy'],
                 events=[phase2_visualise,],
