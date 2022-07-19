@@ -170,8 +170,8 @@ class SaliencyLoss:
         total_loss = 10*sigmoid_loss + 0.1*fidelity_loss + self.preserver_loss_coef*preserver_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss
         # total_loss = sigmoid_loss + fidelity_loss*0.1 + self.area_loss_coef*area_loss + self.preserver_loss_coef*preserver_loss
         print('*'*50)
-        print(f'sigmoid: {sigmoid_loss.detach().numpy()},    fidelity: {fidelity_loss.detach().numpy()}, preserver: {preserver_loss.detach().numpy()}')
-        print(f'area: {area_loss.detach().numpy()},    smoothness: {smoothness_loss.detach().numpy()}')
+        print(f'sigmoid: {sigmoid_loss.cpu().detach().numpy()},    fidelity: {fidelity_loss.cpu().detach().numpy()}, preserver: {preserver_loss.cpu().detach().numpy()}')
+        print(f'area: {area_loss.cpu().detach().numpy()},    smoothness: {smoothness_loss.cpu().detach().numpy()}')
         if pt_store is not None:
             # add variables to the pt_store
             pt_store(masks=_masks)
