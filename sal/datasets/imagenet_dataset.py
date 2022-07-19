@@ -47,7 +47,7 @@ def get_val_dataset(size=224):
 
 def get_loader(dataset, batch_size=64, pin_memory=True):
     return dataloader.DataLoader(dataset=dataset, batch_size=batch_size,
-                                 shuffle=True, drop_last=True, num_workers=0, pin_memory=pin_memory)
+                                 shuffle=True, drop_last=True, num_workers=8, pin_memory=pin_memory)
 
 
 def test():
