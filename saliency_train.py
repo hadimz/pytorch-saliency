@@ -70,8 +70,6 @@ def ev_phase2(_images, _labels):
     PT(exists_logits=_exists_logits)
     saliency_loss = saliency_loss_calc.get_loss(saliency_p, _images, _labels, _masks, _is_real_target=_is_real_label,  pt_store=PT)
     loss = PT(loss=saliency_loss)
-
-
 @TimeEvent(period=5)
 def phase2_visualise(s):
     pt = s.pt_store
