@@ -167,7 +167,7 @@ class SaliencyLoss:
         if _masks2.size()[-2:] != _images.size()[-2:]:
             _masks2 = F.upsample(_masks2, (_images.size(2), _images.size(3)), mode='bilinear')
         fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
-        total_loss = sigmoid_loss + 0.01*fidelity_loss + preserver_loss + self.area_loss_coef*area_loss# + self.smoothness_loss_coef*smoothness_loss
+        total_loss = sigmoid_loss + 0.01*fidelity_loss + preserver_loss + self.area_loss_coef*area_loss + 0.1*self.smoothness_loss_coef*smoothness_loss
         # total_loss = sigmoid_loss + fidelity_loss*0.1 + self.area_loss_coef*area_loss + self.preserver_loss_coef*preserver_loss
         # print('*'*50)
         # print(f'sigmoid: {sigmoid_loss.cpu().detach().numpy()},    fidelity: {fidelity_loss.cpu().detach().numpy()}, preserver: {preserver_loss.cpu().detach().numpy()}')
