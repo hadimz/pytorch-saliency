@@ -56,7 +56,7 @@ def ev_phase2(_images, _labels):
     _is_real_label = PT(is_real_label=(_targets == _labels).long())
     _masks, _exists_logits, _ = saliency_p(_images, _targets)
     PT(exists_logits=_exists_logits)
-    saliency_loss = saliency_loss_calc.get_loss(_images, _labels, _masks, _is_real_target=_is_real_label,  pt_store=PT)
+    saliency_loss = saliency_loss_calc.get_loss(saliency_p, _images, _labels, _masks, _is_real_target=_is_real_label,  pt_store=PT)
     loss = PT(loss=saliency_loss)
 
 
