@@ -138,12 +138,12 @@ class SaliencyLoss:
         self.smoothness_loss_coef = smoothness_loss_coef
         self.preserver_loss_coef = preserver_loss_coef
         self.num_classes = num_classes
-        self.area_loss_power = area_loss_power
+        self.area_loss_power =area_loss_power
         self.preserver_confidence = preserver_confidence
         self.destroyer_confidence = destroyer_confidence
         self.apply_mask_kwargs = apply_mask_kwargs
 
-    def get_loss(self, _model, _images, _targets, _masks, _is_real_target=None, pt_store=None):
+    def get_loss(self, _images, _targets, _masks, _is_real_target=None, pt_store=None):
         ''' masks must be already in the range 0,1 and of shape:  (B, 1, ?, ?)'''
         if _masks.size()[-2:] != _images.size()[-2:]:
             _masks = F.upsample(_masks, (_images.size(2), _images.size(3)), mode='bilinear')
@@ -161,20 +161,9 @@ class SaliencyLoss:
         destroyer_loss = cw_loss(destroyed_logits, _one_hot_targets, targeted=_is_real_target == 0, t_conf=1., nt_conf=self.destroyer_confidence)
         area_loss = calc_area_loss(_masks, self.area_loss_power)
         smoothness_loss = calc_smoothness_loss(_masks)
-        # sigmoid_loss = -0.5 + torch.mean(torch.sigmoid(100*_masks.clone()))
 
-        # _masks2, _, _ = _model(_images, _targets)
-        # if _masks2.size()[-2:] != _images.size()[-2:]:
-        #     _masks2 = F.upsample(_masks2, (_images.size(2), _images.size(3)), mode='bilinear')
-        # fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
-        
         total_loss = destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
-        # total_loss = sigmoid_loss + 0.01*fidelity_loss + preserver_loss + self.area_loss_coef*area_loss + 0.1*self.smoothness_loss_coef*smoothness_loss
-        # total_loss = sigmoid_loss + fidelity_loss*0.1 + self.area_loss_coef*area_loss + self.preserver_loss_coef*preserver_loss
-        # print('*'*50)
-        # print(f'sigmoid: {sigmoid_loss.cpu().detach().numpy()},    fidelity: {fidelity_loss.cpu().detach().numpy()}, preserver: {preserver_loss.cpu().detach().numpy()}')
-        # print(f'area: {area_loss.cpu().detach().numpy()},    smoothness: {smoothness_loss.cpu().detach().numpy()}')
-        
+
         if pt_store is not None:
             # add variables to the pt_store
             pt_store(masks=_masks)
