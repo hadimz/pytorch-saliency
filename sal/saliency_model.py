@@ -138,7 +138,7 @@ class SaliencyLoss:
         self.smoothness_loss_coef = smoothness_loss_coef
         self.preserver_loss_coef = preserver_loss_coef
         self.num_classes = num_classes
-        self.area_loss_power = area_loss_power
+        self.area_loss_power =area_loss_power
         self.preserver_confidence = preserver_confidence
         self.destroyer_confidence = destroyer_confidence
         self.apply_mask_kwargs = apply_mask_kwargs

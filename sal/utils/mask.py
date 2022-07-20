@@ -37,7 +37,7 @@ def apply_mask(images, mask, noise=True, random_colors=True, blurred_version_pro
 
     if boolean:
         # remember its just for validation!
-        return (mask > 0.5).float()*images
+        return (mask > 0.5).float() *images
 
     assert 0. <= bypass < 0.9
     n, c, _, _ = images.size()
