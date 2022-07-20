@@ -10,6 +10,8 @@ import os
 # PLEASE EDIT THESE 2 LINES:
 IMAGE_NET_TRAIN_PATH = '../input/imagenetmini-1000/imagenet-mini/train'
 IMAGE_NET_VAL_PATH = '../input/imagenetmini-1000/imagenet-mini/val'
+# IMAGE_NET_TRAIN_PATH = 'imagenet-mini/train'
+# IMAGE_NET_VAL_PATH = 'imagenet-mini/val'
 
 
 #-----------------------------------------------------
