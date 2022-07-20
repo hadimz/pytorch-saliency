@@ -88,9 +88,9 @@ nt_phase1.train(8500)
 print(GREEN_STR % 'Finished phase 1 of training, waiting until the dataloading workers shut down...')
 
 nt_phase2 = NiceTrainer(ev_phase2,
-                dts.get_loader(train_dts, batch_size=64),
+                dts.get_loader(train_dts, batch_size=32),
                 optim_phase2,
-                val_dts=dts.get_loader(val_dts, batch_size=64),
+                val_dts=dts.get_loader(val_dts, batch_size=32),
                 modules=[saliency],
                 printable_vars=['loss', 'exists_accuracy'],
                 events=[phase2_visualise,],
