@@ -162,7 +162,9 @@ class SaliencyLoss:
         area_loss = calc_area_loss(_masks, self.area_loss_power)
         smoothness_loss = calc_smoothness_loss(_masks)
         
-        total_loss = 0.0*destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
+        sigmoid_loss = torch.mean(-0.5 + torch.sigmoid(_masks*100))
+
+        total_loss = sigmoid_loss + 0.0*destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
 
         if pt_store is not None:
             # add variables to the pt_store
