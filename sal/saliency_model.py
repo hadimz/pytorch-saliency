@@ -143,7 +143,7 @@ class SaliencyLoss:
         self.destroyer_confidence = destroyer_confidence
         self.apply_mask_kwargs = apply_mask_kwargs
 
-    def get_loss(self, _images, _targets, _masks, _is_real_target=None, pt_store=None, black_box_fn=None):
+    def get_loss(self, _images, _targets, _masks, _is_real_target=None, pt_store=None, _masks2=None):
         ''' masks must be already in the range 0,1 and of shape:  (B, 1, ?, ?)'''
         if _masks.size()[-2:] != _images.size()[-2:]:
             _masks = F.upsample(_masks, (_images.size(2), _images.size(3)), mode='bilinear')
@@ -164,8 +164,7 @@ class SaliencyLoss:
 
         sigmoid_loss = torch.mean(F.sigmoid(100*_masks))*2 - 1
         fidelity_loss = 0
-        if black_box_fn:
-            _masks2 = black_box_fn(torch.multiply(_images, _masks))
+        if _masks2:
             fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
             #********************************************************
             # _masks3 = black_box_fn(torch.multiply(_images, 1-_masks))

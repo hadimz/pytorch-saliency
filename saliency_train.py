@@ -55,8 +55,9 @@ def ev_phase2(_images, _labels):
     _targets = PT(targets=(_labels + Variable(torch.Tensor(_images.size(0)).uniform_(1, 999).cuda()).long()*__fakes.long())%1000)
     _is_real_label = PT(is_real_label=(_targets == _labels).long())
     _masks, _exists_logits, _ = saliency_p(_images, _targets)
+    _masks2, _, _ = saliency_p(torch.multiply(_images, _masks), _targets)
     PT(exists_logits=_exists_logits)
-    saliency_loss = saliency_loss_calc.get_loss(_images, _labels, _masks, _is_real_target=_is_real_label,  pt_store=PT, black_box_fn=saliency_p)
+    saliency_loss = saliency_loss_calc.get_loss(_images, _labels, _masks, _is_real_target=_is_real_label,  pt_store=PT, )
     loss = PT(loss=saliency_loss)
 
 
