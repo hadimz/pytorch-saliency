@@ -57,7 +57,7 @@ def ev_phase2(_images, _labels):
     _masks, _exists_logits, _ = saliency_p(_images, _targets)
     _masks2, _, _ = saliency_p(torch.multiply(_images, F.upsample(_masks, (_images.size(2), _images.size(3)), mode='bilinear')), _targets)
     PT(exists_logits=_exists_logits)
-    saliency_loss = saliency_loss_calc.get_loss(_images, _labels, _masks, _is_real_target=_is_real_label,  pt_store=PT, )
+    saliency_loss = saliency_loss_calc.get_loss(_images, _labels, _masks, _is_real_target=_is_real_label,  pt_store=PT, _masks2=_masks2)
     loss = PT(loss=saliency_loss)
 
 
