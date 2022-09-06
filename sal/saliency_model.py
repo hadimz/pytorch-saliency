@@ -162,7 +162,7 @@ class SaliencyLoss:
         area_loss = calc_area_loss(_masks, self.area_loss_power)
         smoothness_loss = calc_smoothness_loss(_masks)
 
-        sigmoid_loss = torch.mean(F.sigmoid(100*_masks))*2 - 1
+        sigmoid_loss = torch.mean(torch.sigmoid(100*_masks))*2 - 1
         fidelity_loss = 0
         if _masks2:
             fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
