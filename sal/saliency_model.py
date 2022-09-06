@@ -161,9 +161,8 @@ class SaliencyLoss:
         destroyer_loss = cw_loss(destroyed_logits, _one_hot_targets, targeted=_is_real_target == 0, t_conf=1., nt_conf=self.destroyer_confidence)
         area_loss = calc_area_loss(_masks, self.area_loss_power)
         smoothness_loss = calc_smoothness_loss(_masks)
-        
-        sigmoid_loss = torch.mean(torch.sigmoid(100*_masks.clone()))
-        total_loss = sigmoid_loss + destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
+
+        total_loss = destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
 
         if pt_store is not None:
             # add variables to the pt_store
