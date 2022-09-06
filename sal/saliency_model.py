@@ -165,6 +165,8 @@ class SaliencyLoss:
         sigmoid_loss = torch.mean(torch.sigmoid(100*_masks))*2 - 1
         fidelity_loss = 0
         if _masks2 is not None:
+            if _masks2.size()[-2:] != _images.size()[-2:]:
+                _masks2 = F.upsample(_masks2, (_images.size(2), _images.size(3)), mode='bilinear')
             fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
             #********************************************************
             # _masks3 = black_box_fn(torch.multiply(_images, 1-_masks))
