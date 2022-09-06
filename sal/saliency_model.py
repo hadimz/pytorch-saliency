@@ -168,8 +168,8 @@ class SaliencyLoss:
             _masks2 = black_box_fn(torch.multiply(_images, _masks))
             fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
             #********************************************************
-            _masks3 = black_box_fn(torch.multiply(_images, 1-_masks))
-            compactness_loss = torch.mean(torch.abs(_masks3))
+            # _masks3 = black_box_fn(torch.multiply(_images, 1-_masks))
+            # compactness_loss = torch.mean(torch.abs(_masks3))
 
         total_loss = (0.1**6)*sigmoid_loss + fidelity_loss + destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
 
