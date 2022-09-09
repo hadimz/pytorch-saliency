@@ -172,7 +172,7 @@ class SaliencyLoss:
         if _masks3 is not None:
             compactness_loss = torch.mean(_masks3)
         
-        total_loss = 0.1*destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
+        total_loss = 0.5*destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
         total_loss += (0.1**6)*sigmoid_loss + (0.1**2)*fidelity_loss
 
 
