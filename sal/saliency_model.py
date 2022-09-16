@@ -133,7 +133,7 @@ class SaliencyModel(Module):
         local_mask_upscaled = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
         output_mask = self.combine(torch.cat([ab, local_mask_upscaled], dim=1))
         
-        return F.softmax(output_mask), exists_logits, out[-1]
+        return F.sigmoid(output_mask), exists_logits, out[-1]
         # return torch.unsqueeze(a/(a+b), dim=1), exists_logits, out[-1]
 
 
