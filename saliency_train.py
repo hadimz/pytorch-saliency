@@ -27,7 +27,7 @@ saliency = SaliencyModel(resnet50encoder(pretrained=True), 5, 64, 3, 64, fix_enc
 saliency_p = nn.DataParallel(saliency).cuda()
 saliency_loss_calc = SaliencyLoss(black_box_fn, smoothness_loss_coef=0.005) # model based saliency requires very small smoothness loss and therefore can produce very sharp masks
 optim_phase1 = torch_optim.Adam(saliency.selector_module.parameters(), 0.001, weight_decay=0.0001)
-optim_phase2 = torch_optim.Adam(saliency.get_trainable_parameters(), 0.001, weight_decay=0.0001)
+optim_phase2 = torch_optim.Adam(saliency.get_trainable_parameters(), 0.0001, weight_decay=0.0001)
 
 @TrainStepEvent()
 @EveryNthEvent(4000)
