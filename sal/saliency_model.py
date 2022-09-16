@@ -61,7 +61,7 @@ class SaliencyModel(Module):
             s = encoder_base*2**encoder_scales
             self.selector_module = nn.Embedding(num_classes, s)
             self.selector_module.weight.data.normal_(0, 1./s**0.5)
-        self.combine = torch.nn.Conv2d(3, 1, 1)
+        self.combine = torch.nn.Conv2d(3, 2, 1)
         self.local = torch.nn.Linear(56*56*2, 8*8)
 
 
@@ -125,7 +125,6 @@ class SaliencyModel(Module):
         if self.use_simple_activation:
             return torch.unsqueeze(torch.sigmoid(saliency_chans[:,0,:,:]/2), dim=1), exists_logits, out[-1]
 
-
         a = torch.abs(saliency_chans[:,0:1,:,:])
         b = torch.abs(saliency_chans[:,1:2,:,:])
         ab = torch.cat([a,b], dim=1)
@@ -133,8 +132,11 @@ class SaliencyModel(Module):
         local_mask_upscaled = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
         output_mask = self.combine(torch.cat([ab, local_mask_upscaled], dim=1))
         
-        return F.sigmoid(output_mask), exists_logits, out[-1]
-        # return torch.unsqueeze(a/(a+b), dim=1), exists_logits, out[-1]
+        a = torch.abs(output_mask[:,0:1,:,:])
+        b = torch.abs(output_mask[:,1:2,:,:])
+        
+        # return F.sigmoid(output_mask), exists_logits, out[-1]
+        return a/(a+b), exists_logits, out[-1]
 
 
 
