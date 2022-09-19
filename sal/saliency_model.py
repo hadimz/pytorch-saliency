@@ -95,6 +95,7 @@ class SaliencyModel(Module):
         return set(all_params) - set(unwanted) - (set(self.selector_module.parameters()) if self.allow_selector else set([]))
 
     def forward(self, _images, _selectors=None, pt_store=None, model_confidence=0.):
+        _selectors = None
         # forward pass through the encoder
         out = self.encoder(_images)
         if self.fix_encoder:
