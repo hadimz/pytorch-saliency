@@ -134,8 +134,8 @@ class SaliencyModel(Module):
         output_mask = self.combine1(torch.cat([ab, local_mask_upscaled], dim=1))
         output_mask = self.combine2(output_mask)
         
-        a = torch.abs(output_mask[:,0:1,:,:])
-        b = torch.abs(output_mask[:,1:2,:,:])
+        a = torch.sigmoid(output_mask[:,0:1,:,:])
+        b = torch.sigmoid(output_mask[:,1:2,:,:])
         
         # return F.sigmoid(output_mask), exists_logits, out[-1]
         return a/(a+b), exists_logits, out[-1]
