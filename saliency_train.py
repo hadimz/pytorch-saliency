@@ -26,16 +26,16 @@ saliency = SaliencyModel(resnet50encoder(pretrained=True), 5, 64, 3, 64, fix_enc
 
 saliency_p = nn.DataParallel(saliency).cuda()
 saliency_loss_calc = SaliencyLoss(black_box_fn, smoothness_loss_coef=0.005) # model based saliency requires very small smoothness loss and therefore can produce very sharp masks
-# optim_phase1 = torch_optim.Adam(saliency.selector_module.parameters(), 0.001, weight_decay=0.0001)
+optim_phase1 = torch_optim.Adam(saliency.selector_module.parameters(), 0.001, weight_decay=0.0001)
 optim_phase2 = torch_optim.Adam(saliency.get_trainable_parameters(), 0.0001, weight_decay=0.0001)
 
-# @TrainStepEvent()
-# @EveryNthEvent(4000)
-# def lr_step_phase1(s):
-#     print
-#     print(GREEN_STR % 'Reducing lr by a factor of 10')
-#     for param_group in optim_phase1.param_groups:
-#         param_group['lr'] = param_group['lr'] / 10.
+@TrainStepEvent()
+@EveryNthEvent(4000)
+def lr_step_phase1(s):
+    print
+    print(GREEN_STR % 'Reducing lr by a factor of 10')
+    for param_group in optim_phase1.param_groups:
+        param_group['lr'] = param_group['lr'] / 10.
 
 
 @ev_batch_to_images_labels
@@ -76,14 +76,14 @@ def phase2_visualise(s):
 
 
 
-# nt_phase1 = NiceTrainer(ev_phase1, dts.get_loader(train_dts, batch_size=128), optim_phase1,
-#                  val_dts=dts.get_loader(val_dts, batch_size=128),
-#                  modules=[saliency],
-#                  printable_vars=['loss', 'exists_accuracy'],
-#                  events=[lr_step_phase1,],
-#                  computed_variables={'exists_accuracy': accuracy_calc_op('exists_logits', 'is_real_label')})
-# FAKE_PROB = .5
-# nt_phase1.train(8500)
+nt_phase1 = NiceTrainer(ev_phase1, dts.get_loader(train_dts, batch_size=128), optim_phase1,
+                 val_dts=dts.get_loader(val_dts, batch_size=128),
+                 modules=[saliency],
+                 printable_vars=['loss', 'exists_accuracy'],
+                 events=[lr_step_phase1,],
+                 computed_variables={'exists_accuracy': accuracy_calc_op('exists_logits', 'is_real_label')})
+FAKE_PROB = .5
+nt_phase1.train(8500)
 
 print(GREEN_STR % 'Finished phase 1 of training, waiting until the dataloading workers shut down...')
 

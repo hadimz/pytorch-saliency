@@ -26,9 +26,6 @@ class SaliencyModel(Module):
     def __init__(self, encoder, encoder_scales, encoder_base, upsampler_scales, upsampler_base, fix_encoder=True,
                  use_simple_activation=False, allow_selector=False, num_classes=1000):
         super(SaliencyModel, self).__init__()
-        #************************
-        allow_selector = False
-        #************************
         assert upsampler_scales <= encoder_scales
 
         self.encoder = encoder  # decoder must return at least scale0 to scaleN where N is num_scales
@@ -98,9 +95,6 @@ class SaliencyModel(Module):
         return set(all_params) - set(unwanted) - (set(self.selector_module.parameters()) if self.allow_selector else set([]))
 
     def forward(self, _images, _selectors=None, pt_store=None, model_confidence=0.):
-        #************************
-        _selectors = None
-        #************************
         # forward pass through the encoder
         out = self.encoder(_images)
         if self.fix_encoder:
