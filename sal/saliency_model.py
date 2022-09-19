@@ -180,7 +180,9 @@ class SaliencyLoss:
         if _masks2 is not None:
             if _masks2.size()[-2:] != _images.size()[-2:]:
                 _masks2 = F.upsample(_masks2, (_images.size(2), _images.size(3)), mode='bilinear')
-            fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
+            # fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
+            fidelity_loss = torch.mean(torch.min(_masks, _masks2) / torch.max(_masks, _masks2))
+
         
         # if _masks3 is not None:
         #     compactness_loss = torch.mean(_masks3)
