@@ -126,9 +126,8 @@ class SaliencyModel(Module):
         if self.use_simple_activation:
             return torch.unsqueeze(torch.sigmoid(saliency_chans[:,0,:,:]/2), dim=1), exists_logits, out[-1]
 
-        a = torch.abs(saliency_chans[:,0:1,:,:])
-        b = torch.abs(saliency_chans[:,1:2,:,:])
-        ab = torch.cat([a,b], dim=1)
+        
+        ab = saliency_chans[:,1:2,:,:]
         local_mask = torch.sigmoid(self.local(ab.view(-1, 1, 56*56*2)))
         local_mask_upscaled = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
         output_mask = self.combine1(torch.cat([ab, local_mask_upscaled], dim=1))
@@ -185,7 +184,7 @@ class SaliencyLoss:
         #     compactness_loss = torch.mean(_masks3)
         
         total_loss = destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
-        # total_loss += (0.1**6)*sigmoid_loss + (0.1**2)*fidelity_loss
+        total_loss += (0.1**6)*sigmoid_loss + (0.1**2)*fidelity_loss
 
 
         if pt_store is not None:
