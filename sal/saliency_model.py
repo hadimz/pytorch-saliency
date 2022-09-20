@@ -191,7 +191,7 @@ class SaliencyLoss:
         total_loss += self.smoothness_loss_coef*smoothness_loss 
         total_loss += self.preserver_loss_coef*preserver_loss
 
-        total_loss += (0.1**6)*sigmoid_loss + (0.1**2)*fidelity_loss
+        total_loss += (0.1**3)*sigmoid_loss + (0.1**2)*fidelity_loss
 
 
         if pt_store is not None:
