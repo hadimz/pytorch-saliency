@@ -61,10 +61,13 @@ class SaliencyModel(Module):
             s = encoder_base*2**encoder_scales
             self.selector_module = nn.Embedding(num_classes, s)
             self.selector_module.weight.data.normal_(0, 1./s**0.5)
-        self.combine1 = torch.nn.Conv2d(3, 32, 1)
-        self.combine2 = torch.nn.Conv2d(32, 2, 1)
+        
         # self.local = torch.nn.Linear(56*56*2, 8*8)
         self.local = torch.nn.Linear(56*56*2, 56*56)
+        self.combine1 = torch.nn.Conv2d(3, 128, 1)
+        self.combine2 = torch.nn.Conv2d(128, 32, 1)
+        self.combine3 = torch.nn.Conv2d(32, 2, 1)
+        
 
 
     def minimialistic_restore(self, save_dir):
@@ -134,6 +137,7 @@ class SaliencyModel(Module):
         # local_mask = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
         output_mask = self.combine1(torch.cat([ab, local_mask], dim=1))
         output_mask = self.combine2(output_mask)
+        output_mask = self.combine3(output_mask)
         
         a = torch.abs(output_mask[:,0:1,:,:])
         b = torch.abs(output_mask[:,1:2,:,:])
