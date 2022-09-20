@@ -64,7 +64,7 @@ class SaliencyModel(Module):
         
 
         # self.local = torch.nn.Linear(56*56*2, 8*8)
-        self.local = torch.nn.Linear(56*56*2, 28*28)
+        self.local = torch.nn.Linear(28*28*2, 28*28)
         self.combine1 = torch.nn.Conv2d(3, 128, 3)
         self.combine2 = torch.nn.Conv2d(128, 32, 3)
         self.combine3 = torch.nn.Conv2d(32, 2, 1)
