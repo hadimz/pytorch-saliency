@@ -132,6 +132,7 @@ class SaliencyModel(Module):
             return torch.unsqueeze(torch.sigmoid(saliency_chans[:,0,:,:]/2), dim=1), exists_logits, out[-1]
 
         
+
         ab = saliency_chans[:,0:2,:,:]
         ab = F.max_pool2d(ab, 2)
         local_mask = torch.sigmoid(self.local(ab.reshape(-1, 28*28*2)))
@@ -197,7 +198,7 @@ class SaliencyLoss:
         total_loss += self.smoothness_loss_coef*smoothness_loss 
         total_loss += self.preserver_loss_coef*preserver_loss
 
-        total_loss += (0.1**4)*sigmoid_loss + (0.1**2)*fidelity_loss
+        total_loss += (0.1**6)*sigmoid_loss + (0.1**2)*fidelity_loss
 
 
         if pt_store is not None:
