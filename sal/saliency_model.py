@@ -65,8 +65,8 @@ class SaliencyModel(Module):
 
         # self.local = torch.nn.Linear(56*56*2, 8*8)
         self.local = torch.nn.Linear(56*56*2, 56*56)
-        self.combine1 = torch.nn.Conv2d(3, 32, 1)
-        # self.combine2 = torch.nn.Conv2d(128, 32, 1)
+        self.combine1 = torch.nn.Conv2d(3, 128, 3)
+        self.combine2 = torch.nn.Conv2d(128, 32, 3)
         self.combine3 = torch.nn.Conv2d(32, 2, 1)
         
 
@@ -137,7 +137,7 @@ class SaliencyModel(Module):
         local_mask = local_mask.view(-1, 1, 56, 56)
         # local_mask = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
         output_mask = self.combine1(torch.cat([ab, local_mask], dim=1))
-        # output_mask = self.combine2(output_mask)
+        output_mask = self.combine2(output_mask)
         output_mask = self.combine3(output_mask)
         
         a = torch.abs(output_mask[:,0:1,:,:])
