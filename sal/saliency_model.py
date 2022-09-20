@@ -133,6 +133,7 @@ class SaliencyModel(Module):
 
         
         ab = saliency_chans[:,0:2,:,:]
+        ab = ab[:,:,::2, ::2]
         local_mask = torch.sigmoid(self.local(ab.view(-1, 1, 56*56*2)))
         local_mask = local_mask.view(-1, 1, 28, 28)
         # local_mask = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
