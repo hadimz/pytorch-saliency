@@ -125,7 +125,8 @@ class SaliencyModel(Module):
 
             main_flow = self._modules['up%d'%up](main_flow, out[down-1])
             down -= 1
-        # now get the final saliency map (the reslution of the map = resolution_of_the_image / (2**(encoder_scales-upsampler_scales)))
+        # now get the final saliency map (the reslution of the 
+        # map = resolution_of_the_image / (2**(encoder_scales-upsampler_scales)))
         saliency_chans = self.to_saliency_chans(main_flow)
 
         if self.use_simple_activation:
@@ -135,10 +136,10 @@ class SaliencyModel(Module):
 
         ab = saliency_chans[:,0:2,:,:]
         ab = F.max_pool2d(ab, 2)
-        local_mask = torch.sigmoid(self.local(ab.reshape(-1, 28*28*2)))
+        local_mask = F.relu(self.local(ab.reshape(-1, 28*28*2)))
         local_mask = local_mask.view(-1, 1, 28, 28)
         # local_mask = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
-        output_mask = self.combine1(torch.cat([ab, local_mask], dim=1))
+        output_mask = F.relu(self.combine1(torch.cat([ab, local_mask], dim=1)))
         # output_mask = self.combine2(output_mask)
         output_mask = self.combine3(output_mask)
         
@@ -177,8 +178,16 @@ class SaliencyLoss:
         preserved_logits = self.black_box_fn(preserved_images)
 
         _one_hot_targets = one_hot(_targets, self.num_classes)
-        preserver_loss = cw_loss(preserved_logits, _one_hot_targets, targeted=_is_real_target == 1, t_conf=self.preserver_confidence, nt_conf=1.)
-        destroyer_loss = cw_loss(destroyed_logits, _one_hot_targets, targeted=_is_real_target == 0, t_conf=1., nt_conf=self.destroyer_confidence)
+        preserver_loss = cw_loss(preserved_logits,
+                                _one_hot_targets, 
+                                targeted=_is_real_target == 1, 
+                                t_conf=self.preserver_confidence, 
+                                nt_conf=1.)
+        destroyer_loss = cw_loss(destroyed_logits,
+                                _one_hot_targets, 
+                                targeted=_is_real_target == 0, 
+                                t_conf=1., 
+                                nt_conf=self.destroyer_confidence)
         area_loss = calc_area_loss(_masks, self.area_loss_power)
         smoothness_loss = calc_smoothness_loss(_masks)
 
