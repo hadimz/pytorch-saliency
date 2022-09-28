@@ -198,7 +198,7 @@ class SaliencyLoss:
                 _masks2 = F.upsample(_masks2, (_images.size(2), _images.size(3)), mode='bilinear')
             # fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
             # fidelity_loss = torch.mean(torch.max(_masks, _masks2) / ((0.1**2) + torch.min(_masks, _masks2)))
-            fidelity_loss = nn.BCELoss()(_masks, _masks2)
+            fidelity_loss = F.binary_cross_entropy(_masks2, _masks)
         
         # if _masks3 is not None:
         #     compactness_loss = torch.mean(_masks3)
