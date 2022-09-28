@@ -51,10 +51,11 @@ class SaliencyModel(Module):
                                 follow_up_residual_blocks=1,
                                 activation_fn=lambda: nn.ReLU(),
                             ))
-            torch.nn.init.xavier_uniform(self._modules['up%d'%up])
+            torch.nn.init.xavier_uniform(self._modules['up%d'%up].upsampler.weight)
             down -= 1
 
         self.to_saliency_chans = nn.Conv2d(upsampler_base, 2, 1)
+        torch.nn.init.xavier_uniform(self.to_saliency_chans.weight)
 
         self.allow_selector = allow_selector
 
