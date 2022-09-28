@@ -51,6 +51,7 @@ class SaliencyModel(Module):
                                 follow_up_residual_blocks=1,
                                 activation_fn=lambda: nn.ReLU(),
                             ))
+            torch.nn.init.xavier_uniform(self._modules['up%d'%up])
             down -= 1
 
         self.to_saliency_chans = nn.Conv2d(upsampler_base, 2, 1)
@@ -208,7 +209,10 @@ class SaliencyLoss:
         total_loss += self.smoothness_loss_coef*smoothness_loss 
         total_loss += self.preserver_loss_coef*preserver_loss
 
-        total_loss += (0.1**6)*sigmoid_loss + (0.1**2)*fidelity_loss
+        total_loss += (0.1**6)*sigmoid_loss
+        total_loss += (0.1**2)*fidelity_loss
+
+
 
 
         if pt_store is not None:
