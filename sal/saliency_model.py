@@ -70,7 +70,7 @@ class SaliencyModel(Module):
         self.combine1 = torch.nn.Conv2d(3, 128, 3)
         self.combine2 = torch.nn.Conv2d(128, 32, 3)
         self.combine3 = torch.nn.Conv2d(32, 2, 1)
-        from init import weight_init
+        from weight_init import weight_init
         self.apply(weight_init)
 
 
