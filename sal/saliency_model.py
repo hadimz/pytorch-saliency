@@ -5,6 +5,8 @@ from torch.nn import Module
 from sal.utils.mask import *
 from torchvision.models.resnet import resnet50
 import os
+from weight_init import weight_init
+
 
 def get_black_box_fn(model_zoo_model=resnet50, cuda=True, image_domain=(-2., 2.)):
     ''' You can try any model from the pytorch model zoo (torchvision.models)
@@ -51,6 +53,7 @@ class SaliencyModel(Module):
                                 follow_up_residual_blocks=1,
                                 activation_fn=lambda: nn.ReLU(),
                             ))
+            self._modules['up%d'%up].apply(weight_init)
             down -= 1
         
 
@@ -70,8 +73,7 @@ class SaliencyModel(Module):
         self.combine1 = torch.nn.Conv2d(3, 128, 3)
         self.combine2 = torch.nn.Conv2d(128, 32, 3)
         self.combine3 = torch.nn.Conv2d(32, 2, 1)
-        from weight_init import weight_init
-        self.apply(weight_init)
+        
 
 
     def minimialistic_restore(self, save_dir):
