@@ -51,7 +51,6 @@ class SaliencyModel(Module):
                                 follow_up_residual_blocks=1,
                                 activation_fn=lambda: nn.ReLU(),
                             ))
-            torch.nn.init.xavier_normal_(self._modules['up%d'%up].parameters)
             down -= 1
         
 
