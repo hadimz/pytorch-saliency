@@ -4,7 +4,7 @@ from sal.utils.pytorch_trainer import *
 from sal.saliency_model import SaliencyModel, SaliencyLoss, get_black_box_fn
 from sal.datasets import imagenet_dataset
 from sal.utils.resnet_encoder import resnet50encoder
-from torchvision.models.resnet import resnet50
+from torchvision.models.resnet import resnet50, VGG16
 import pycat
 
 
@@ -13,7 +13,7 @@ import pycat
 # The training code does not need to be changed and the default values should work well for high resolution ~300x300 real-world images.
 # By default we train on 224x224 resolution ImageNet images with a resnet50 black box classifier.
 dts = imagenet_dataset
-black_box_fn = get_black_box_fn(model_zoo_model=resnet50)
+black_box_fn = get_black_box_fn(model_zoo_model=VGG16)
 # ----------------
 
 
