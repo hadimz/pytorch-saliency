@@ -4,7 +4,8 @@ from sal.utils.pytorch_trainer import *
 from sal.saliency_model import SaliencyModel, SaliencyLoss, get_black_box_fn
 from sal.datasets import imagenet_dataset
 from sal.utils.resnet_encoder import resnet50encoder
-from torchvision.models.resnet import resnet50, VGG16
+from torchvision.models.resnet import resnet50
+from torchvision.models import VGG16
 import pycat
 
 
