@@ -137,19 +137,20 @@ class SaliencyModel(Module):
         if self.use_simple_activation:
             return torch.unsqueeze(torch.sigmoid(saliency_chans[:,0,:,:]/2), dim=1), exists_logits, out[-1]
 
-        
+        a = torch.abs(saliency_chans[:,0,:,:])
+        b = torch.abs(saliency_chans[:,1,:,:])
 
-        ab = saliency_chans[:,0:2,:,:]
-        ab = F.max_pool2d(ab, 2)
-        local_mask = torch.sigmoid(self.local(ab.reshape(-1, 28*28*2)))
-        local_mask = local_mask.view(-1, 1, 28, 28)
-        # local_mask = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
-        output_mask = F.relu(self.combine1(torch.cat([ab, local_mask], dim=1)))
-        output_mask = F.relu(self.combine2(output_mask))
-        output_mask = self.combine3(output_mask)
+        # ab = saliency_chans[:,0:2,:,:]
+        # ab = F.max_pool2d(ab, 2)
+        # local_mask = torch.sigmoid(self.local(ab.reshape(-1, 28*28*2)))
+        # local_mask = local_mask.view(-1, 1, 28, 28)
+        # # local_mask = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
+        # output_mask = F.relu(self.combine1(torch.cat([ab, local_mask], dim=1)))
+        # output_mask = F.relu(self.combine2(output_mask))
+        # output_mask = self.combine3(output_mask)
         
-        a = torch.abs(output_mask[:,0:1,:,:])
-        b = torch.abs(output_mask[:,1:2,:,:])
+        # a = torch.abs(output_mask[:,0:1,:,:])
+        # b = torch.abs(output_mask[:,1:2,:,:])
         
         # return F.sigmoid(output_mask), exists_logits, out[-1]
         return a/(a+b), exists_logits, out[-1]
@@ -213,8 +214,8 @@ class SaliencyLoss:
         total_loss += self.smoothness_loss_coef*smoothness_loss 
         total_loss += self.preserver_loss_coef*preserver_loss
 
-        total_loss += (0.1**6)*sigmoid_loss
-        total_loss += (0.1**2)*fidelity_loss
+        # total_loss += (0.1**6)*sigmoid_loss
+        # total_loss += (0.1**2)*fidelity_loss
 
 
 
