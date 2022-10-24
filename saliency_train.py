@@ -5,6 +5,7 @@ from sal.saliency_model import SaliencyModel, SaliencyLoss, get_black_box_fn
 from sal.datasets import imagenet_dataset
 from sal.utils.resnet_encoder import resnet50encoder
 from torchvision.models.resnet import resnet50
+from torchvision.models import vgg16
 import pycat
 
 
@@ -13,7 +14,7 @@ import pycat
 # The training code does not need to be changed and the default values should work well for high resolution ~300x300 real-world images.
 # By default we train on 224x224 resolution ImageNet images with a resnet50 black box classifier.
 dts = imagenet_dataset
-black_box_fn = get_black_box_fn(model_zoo_model=resnet50)
+black_box_fn = get_black_box_fn(model_zoo_model=vgg16)
 # ----------------
 
 
@@ -27,7 +28,7 @@ saliency = SaliencyModel(resnet50encoder(pretrained=True), 5, 64, 3, 64, fix_enc
 saliency_p = nn.DataParallel(saliency).cuda()
 saliency_loss_calc = SaliencyLoss(black_box_fn, smoothness_loss_coef=0.005) # model based saliency requires very small smoothness loss and therefore can produce very sharp masks
 optim_phase1 = torch_optim.Adam(saliency.selector_module.parameters(), 0.001, weight_decay=0.0001)
-optim_phase2 = torch_optim.Adam(saliency.get_trainable_parameters(), 0.001, weight_decay=0.0001)
+optim_phase2 = torch_optim.Adam(saliency.get_trainable_parameters(), 0.0001, weight_decay=0.0001)
 
 @TrainStepEvent()
 @EveryNthEvent(4000)
@@ -55,8 +56,11 @@ def ev_phase2(_images, _labels):
     _targets = PT(targets=(_labels + Variable(torch.Tensor(_images.size(0)).uniform_(1, 999).cuda()).long()*__fakes.long())%1000)
     _is_real_label = PT(is_real_label=(_targets == _labels).long())
     _masks, _exists_logits, _ = saliency_p(_images, _targets)
+    _masks_normal = (_masks - torch.mean(_masks))/torch.std(_masks)
+    _masks2 = None #, _, _ = saliency_p(torch.multiply(_images, F.upsample(_masks_normal, (_images.size(2), _images.size(3)), mode='bilinear')), _targets)
+    _masks3 = None #, _, _ = saliency_p(torch.multiply(_images, 1-F.upsample(_masks, (_images.size(2), _images.size(3)), mode='bilinear')), _targets)
     PT(exists_logits=_exists_logits)
-    saliency_loss = saliency_loss_calc.get_loss(_images, _labels, _masks, _is_real_target=_is_real_label,  pt_store=PT)
+    saliency_loss = saliency_loss_calc.get_loss(_images, _labels, _masks, _is_real_target=_is_real_label,  pt_store=PT, _masks2=_masks2, _masks3=_masks3)
     loss = PT(loss=saliency_loss)
 
 
@@ -82,6 +86,7 @@ nt_phase1 = NiceTrainer(ev_phase1, dts.get_loader(train_dts, batch_size=128), op
                  computed_variables={'exists_accuracy': accuracy_calc_op('exists_logits', 'is_real_label')})
 FAKE_PROB = .5
 nt_phase1.train(8500)
+# nt_phase1.train(2500)
 
 print(GREEN_STR % 'Finished phase 1 of training, waiting until the dataloading workers shut down...')
 
@@ -93,4 +98,5 @@ nt_phase2 = NiceTrainer(ev_phase2, dts.get_loader(train_dts, batch_size=64), opt
                  computed_variables={'exists_accuracy': accuracy_calc_op('exists_logits', 'is_real_label')})
 FAKE_PROB = .3
 nt_phase2.train(3000)
+# nt_phase2.train(5000)
 saliency.minimalistic_save('yoursaliencymodel')  # later to restore just use saliency.minimalistic_restore methdod.

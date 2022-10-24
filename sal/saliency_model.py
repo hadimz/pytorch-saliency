@@ -61,6 +61,14 @@ class SaliencyModel(Module):
             s = encoder_base*2**encoder_scales
             self.selector_module = nn.Embedding(num_classes, s)
             self.selector_module.weight.data.normal_(0, 1./s**0.5)
+        
+
+        # self.local = torch.nn.Linear(56*56*2, 8*8)
+        self.local = torch.nn.Linear(28*28*2, 28*28)
+        self.combine1 = torch.nn.Conv2d(3, 32, 3)
+        # self.combine2 = torch.nn.Conv2d(128, 32, 3)
+        self.combine3 = torch.nn.Conv2d(32, 2, 1)
+        
 
 
     def minimialistic_restore(self, save_dir):
@@ -123,10 +131,21 @@ class SaliencyModel(Module):
         if self.use_simple_activation:
             return torch.unsqueeze(torch.sigmoid(saliency_chans[:,0,:,:]/2), dim=1), exists_logits, out[-1]
 
-
-        a = torch.abs(saliency_chans[:,0,:,:])
-        b = torch.abs(saliency_chans[:,1,:,:])
-        return torch.unsqueeze(a/(a+b), dim=1), exists_logits, out[-1]
+        
+        ab = saliency_chans[:,0:2,:,:]
+        ab = F.max_pool2d(ab, 2)
+        local_mask = torch.sigmoid(self.local(ab.reshape(-1, 28*28*2)))
+        local_mask = local_mask.view(-1, 1, 28, 28)
+        # local_mask = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
+        output_mask = self.combine1(torch.cat([ab, local_mask], dim=1))
+        # output_mask = self.combine2(output_mask)
+        output_mask = self.combine3(output_mask)
+        
+        a = torch.abs(output_mask[:,0:1,:,:])
+        b = torch.abs(output_mask[:,1:2,:,:])
+        
+        # return F.sigmoid(output_mask), exists_logits, out[-1]
+        return a/(a+b), exists_logits, out[-1]
 
 
 
@@ -143,7 +162,7 @@ class SaliencyLoss:
         self.destroyer_confidence = destroyer_confidence
         self.apply_mask_kwargs = apply_mask_kwargs
 
-    def get_loss(self, _images, _targets, _masks, _is_real_target=None, pt_store=None):
+    def get_loss(self, _images, _targets, _masks, _is_real_target=None, pt_store=None, _masks2=None, _masks3=None):
         ''' masks must be already in the range 0,1 and of shape:  (B, 1, ?, ?)'''
         if _masks.size()[-2:] != _images.size()[-2:]:
             _masks = F.upsample(_masks, (_images.size(2), _images.size(3)), mode='bilinear')
@@ -162,7 +181,24 @@ class SaliencyLoss:
         area_loss = calc_area_loss(_masks, self.area_loss_power)
         smoothness_loss = calc_smoothness_loss(_masks)
 
-        total_loss = destroyer_loss + self.area_loss_coef*area_loss + self.smoothness_loss_coef*smoothness_loss + self.preserver_loss_coef*preserver_loss
+        sigmoid_loss = torch.mean(torch.sigmoid(100*_masks))*2 - 1
+        fidelity_loss = 0
+        if _masks2 is not None:
+            if _masks2.size()[-2:] != _images.size()[-2:]:
+                _masks2 = F.upsample(_masks2, (_images.size(2), _images.size(3)), mode='bilinear')
+            # fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
+            fidelity_loss = torch.mean(torch.max(_masks, _masks2) / ((0.1**2) + torch.min(_masks, _masks2)))
+        
+        # if _masks3 is not None:
+        #     compactness_loss = torch.mean(_masks3)
+        
+        total_loss  = destroyer_loss 
+        total_loss += self.area_loss_coef*area_loss 
+        total_loss += self.smoothness_loss_coef*smoothness_loss 
+        total_loss += self.preserver_loss_coef*preserver_loss
+
+        total_loss += (0.1**4)*sigmoid_loss + (0.1**2)*fidelity_loss
+
 
         if pt_store is not None:
             # add variables to the pt_store
@@ -176,6 +212,3 @@ class SaliencyLoss:
             pt_store(preserved_logits=preserved_logits)
             pt_store(destroyed_logits=destroyed_logits)
         return total_loss
-
-
-
