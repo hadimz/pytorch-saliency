@@ -5,8 +5,6 @@ from torch.nn import Module
 from sal.utils.mask import *
 from torchvision.models.resnet import resnet50
 import os
-from weight_init import weight_init
-
 
 def get_black_box_fn(model_zoo_model=resnet50, cuda=True, image_domain=(-2., 2.)):
     ''' You can try any model from the pytorch model zoo (torchvision.models)
@@ -53,12 +51,9 @@ class SaliencyModel(Module):
                                 follow_up_residual_blocks=1,
                                 activation_fn=lambda: nn.ReLU(),
                             ))
-            self._modules['up%d'%up].apply(weight_init)
             down -= 1
-        
 
         self.to_saliency_chans = nn.Conv2d(upsampler_base, 2, 1)
-        torch.nn.init.xavier_normal_(self.to_saliency_chans.weight)
 
         self.allow_selector = allow_selector
 
@@ -69,10 +64,10 @@ class SaliencyModel(Module):
         
 
         # self.local = torch.nn.Linear(56*56*2, 8*8)
-        # self.local = torch.nn.Linear(28*28*2, 28*28)
-        # self.combine1 = torch.nn.Conv2d(3, 128, 3)
+        self.local = torch.nn.Linear(28*28*2, 28*28)
+        self.combine1 = torch.nn.Conv2d(3, 32, 3)
         # self.combine2 = torch.nn.Conv2d(128, 32, 3)
-        # self.combine3 = torch.nn.Conv2d(32, 2, 1)
+        self.combine3 = torch.nn.Conv2d(32, 2, 1)
         
 
 
@@ -130,27 +125,24 @@ class SaliencyModel(Module):
 
             main_flow = self._modules['up%d'%up](main_flow, out[down-1])
             down -= 1
-        # now get the final saliency map (the reslution of the 
-        # map = resolution_of_the_image / (2**(encoder_scales-upsampler_scales)))
+        # now get the final saliency map (the reslution of the map = resolution_of_the_image / (2**(encoder_scales-upsampler_scales)))
         saliency_chans = self.to_saliency_chans(main_flow)
 
         if self.use_simple_activation:
             return torch.unsqueeze(torch.sigmoid(saliency_chans[:,0,:,:]/2), dim=1), exists_logits, out[-1]
 
-        a = torch.abs(saliency_chans[:,0,:,:])
-        b = torch.abs(saliency_chans[:,1,:,:])
-
-        # ab = saliency_chans[:,0:2,:,:]
-        # ab = F.max_pool2d(ab, 2)
-        # local_mask = torch.sigmoid(self.local(ab.reshape(-1, 28*28*2)))
-        # local_mask = local_mask.view(-1, 1, 28, 28)
-        # # local_mask = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
-        # output_mask = F.relu(self.combine1(torch.cat([ab, local_mask], dim=1)))
-        # output_mask = F.relu(self.combine2(output_mask))
-        # output_mask = self.combine3(output_mask)
         
-        # a = torch.abs(output_mask[:,0:1,:,:])
-        # b = torch.abs(output_mask[:,1:2,:,:])
+        ab = saliency_chans[:,0:2,:,:]
+        ab = F.max_pool2d(ab, 2)
+        local_mask = torch.sigmoid(self.local(ab.reshape(-1, 28*28*2)))
+        local_mask = local_mask.view(-1, 1, 28, 28)
+        # local_mask = F.upsample(local_mask.view(-1, 1, 8, 8), (56, 56), mode='bilinear')
+        output_mask = self.combine1(torch.cat([ab, local_mask], dim=1))
+        # output_mask = self.combine2(output_mask)
+        output_mask = self.combine3(output_mask)
+        
+        a = torch.abs(output_mask[:,0:1,:,:])
+        b = torch.abs(output_mask[:,1:2,:,:])
         
         # return F.sigmoid(output_mask), exists_logits, out[-1]
         return a/(a+b), exists_logits, out[-1]
@@ -184,27 +176,18 @@ class SaliencyLoss:
         preserved_logits = self.black_box_fn(preserved_images)
 
         _one_hot_targets = one_hot(_targets, self.num_classes)
-        preserver_loss = cw_loss(preserved_logits,
-                                _one_hot_targets, 
-                                targeted=_is_real_target == 1, 
-                                t_conf=self.preserver_confidence, 
-                                nt_conf=1.)
-        destroyer_loss = cw_loss(destroyed_logits,
-                                _one_hot_targets, 
-                                targeted=_is_real_target == 0, 
-                                t_conf=1., 
-                                nt_conf=self.destroyer_confidence)
+        preserver_loss = cw_loss(preserved_logits, _one_hot_targets, targeted=_is_real_target == 1, t_conf=self.preserver_confidence, nt_conf=1.)
+        destroyer_loss = cw_loss(destroyed_logits, _one_hot_targets, targeted=_is_real_target == 0, t_conf=1., nt_conf=self.destroyer_confidence)
         area_loss = calc_area_loss(_masks, self.area_loss_power)
         smoothness_loss = calc_smoothness_loss(_masks)
 
-        # sigmoid_loss = torch.mean(torch.sigmoid(100*_masks))*2 - 1
-        # fidelity_loss = 0
-        # if _masks2 is not None:
-        #     if _masks2.size()[-2:] != _images.size()[-2:]:
-        #         _masks2 = F.upsample(_masks2, (_images.size(2), _images.size(3)), mode='bilinear')
-        #     # fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
-        #     # fidelity_loss = torch.mean(torch.max(_masks, _masks2) / ((0.1**2) + torch.min(_masks, _masks2)))
-        #     fidelity_loss = F.binary_cross_entropy(_masks2, _masks)
+        sigmoid_loss = torch.mean(torch.sigmoid(100*_masks))*2 - 1
+        fidelity_loss = 0
+        if _masks2 is not None:
+            if _masks2.size()[-2:] != _images.size()[-2:]:
+                _masks2 = F.upsample(_masks2, (_images.size(2), _images.size(3)), mode='bilinear')
+            # fidelity_loss = torch.mean(torch.abs(_masks-_masks2))
+            fidelity_loss = torch.mean(torch.max(_masks, _masks2) / ((0.1**2) + torch.min(_masks, _masks2)))
         
         # if _masks3 is not None:
         #     compactness_loss = torch.mean(_masks3)
@@ -214,10 +197,7 @@ class SaliencyLoss:
         total_loss += self.smoothness_loss_coef*smoothness_loss 
         total_loss += self.preserver_loss_coef*preserver_loss
 
-        # total_loss += (0.1**6)*sigmoid_loss
-        # total_loss += (0.1**2)*fidelity_loss
-
-
+        total_loss += (0.1**6)*sigmoid_loss + (0.1**2)*fidelity_loss
 
 
         if pt_store is not None:
